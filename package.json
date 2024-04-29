@@ -1,0 +1,36 @@
+{
+  "name": "facture",
+  "version": "0.1.0",
+  "description": "Sleek and minimal invoice generator CLI",
+  "main": "src/index.mjs",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "attach": "npm link"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nafeu/facture.git"
+  },
+  "bin": {
+    "@nafeu/facture": "bin/facture",
+    "facture": "bin/facture"
+  },
+  "keywords": [
+    "cli",
+    "invoice",
+    "generator",
+    "minimal",
+    "pdf"
+  ],
+  "author": "Nafeu Nasir (nafeu.nasir@gmail.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nafeu/facture/issues"
+  },
+  "homepage": "https://github.com/nafeu/facture#readme",
+  "dependencies": {
+    "commander": "^12.0.0",
+    "puppeteer": "^22.7.1"
+  }
+}
