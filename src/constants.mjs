@@ -17,6 +17,21 @@ export const DEFAULT_DELIMITER    = '|'
 export const DEFAULT_ITEMS        = []
 export const DEFAULT_CURRENCY     = 'USD'
 
+export const RATE_INTERVAL_LABELS = {
+  d:     'day',
+  day:   'day',
+  h:     'hour',
+  hour:  'hour',
+  hr:    'hour',
+  m:     'month',
+  mo:    'month',
+  mon:   'month',
+  month: 'month',
+  w:     'week',
+  week:  'week',
+  wk:    'week',
+}
+
 // Reference: https://github.com/bitfactory-robin-martijn/common-currency/blob/main/common-currency.json
 export const CURRENCY_DATA = {
   USD: { symbol: '$', code: 'USD', name: 'US Dollar', namePlural: 'US dollars' },
