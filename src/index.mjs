@@ -2,16 +2,17 @@ import puppeteer from 'puppeteer';
 import { Command } from 'commander';
 
 import {
+  DEFAULT_CURRENCY,
   DEFAULT_DELIMITER,
   DEFAULT_INVOICE_TYPE,
   DEFAULT_ITEMS,
-  DEFAULT_CURRENCY,
+  DEFAULT_NOTES,
   VALID_DOCUMENT_TYPES
 } from './constants.mjs'
 
 import {
   buildHtml,
-  collectItems,
+  collectMultipleStringArguments,
   getCurrentDateInYYYYMMDD,
   processOptions,
 } from './helpers.mjs'
@@ -20,19 +21,19 @@ export const handleGenerate = async options => {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
-  await page.setContent(buildHtml(processOptions(options)), { waitUntil: 'networkidle0' });
+  const processedOptions = processOptions(options)
 
-  const pdfOptions = {
-    path: 'output.pdf',
+  await page.setContent(buildHtml(processedOptions), { waitUntil: 'networkidle0' });
+
+  await page.pdf({
+    path: processOptions.path,
     format: 'A4',
     printBackground: true
-  };
-
-  await page.pdf(pdfOptions);
+  });
 
   await browser.close();
 
-  console.log(`[ facture v0.1.0 ] Invoice generated successfully!`)
+  console.log(`[ facture v0.1.0 ] Document exported successfully to ${processedOptions.path}`)
 }
 
 export const program = new Command();
@@ -50,9 +51,10 @@ program
   .option('-n, --note <string>', 'Any additional info to add to the bottom of the document')
   .option('-c, --client <string>', 'All of your client\'s information seperated by \'|\' (or custom delimiter)')
   .option('-q, --chequeName <string>', 'The full name to make any cheques out to')
-  .option('-i, --item <string>', 'Add line items to the document', collectItems, DEFAULT_ITEMS)
+  .option('-i, --item <string>', 'Add line items to the document', collectMultipleStringArguments, DEFAULT_ITEMS)
   .option('-r, --currency <currency_code>', 'Three digit currency code (ie. USD, CAD)', DEFAULT_CURRENCY)
   .option('-x, --taxRate <percentage>', 'Percentage of tax to be applied to the subtotal (ie. 0.13 or 13%)')
   .option('-s, --taxNumber <string>', 'Tax identification number (ie. GST/HST number in Canada, TN in US)')
   .option('-d, --date <YYYY-MM-DD>', 'Date of the document in YYYY-MM-DD format', getCurrentDateInYYYYMMDD())
+  .option('-o, --output', 'Name of the pdf output')
   .action(handleGenerate);

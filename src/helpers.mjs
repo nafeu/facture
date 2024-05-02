@@ -9,7 +9,7 @@ export const getCurrentDateInYYYYMMDD = () => {
   return `${year}-${month}-${day}`;
 }
 
-export const collectItems = (item, previousItems) => previousItems.concat(item)
+export const collectMultipleStringArguments = (item, previousItems) => previousItems.concat(item)
 
 export const processOptions = options => {
   const documentTypeLabel = DOCUMENT_TYPE_LABEL_MAPPING[options.type]
@@ -87,7 +87,10 @@ export const processOptions = options => {
   const total      = subtotal + (subtotal * taxRate)
   const totalLabel = `${currencySymbol}${total.toFixed(2)}`
 
-  const output = {
+  const path = options.output
+    || `${options.type}_${documentId}.pdf`
+
+  const processedOptions = {
     ...options,
     ...businessInfo,
     ...clientInfo,
@@ -99,10 +102,11 @@ export const processOptions = options => {
     subtotalLabel,
     taxesLabel,
     taxRateLabel,
-    totalLabel
+    totalLabel,
+    path
   }
 
-  return output
+  return processedOptions
 }
 
 const buildBusinessInfoMarkup = options => [
@@ -117,7 +121,7 @@ const buildClientInfoMarkup = options => [
 
 const buildDocumentItems = options => options
   .items
-  .map(({ service, details, units, rateLabel, totalLabel}) => {
+  .map(({ service, details, units, rateLabel, totalLabel }) => {
     const cells = `
       <td class="px-3 py-2">
         ${service}
@@ -130,6 +134,15 @@ const buildDocumentItems = options => options
 
     return `<tr class="border-b border-gray-200">${cells}</tr>`;
   }).join('')
+
+const buildNotes = options => options
+  .notes
+  .map(({ text, classes }) => `
+    <p class="text-gray-500 mt-2 ${classes}">
+      ${text}
+    </p>
+  `)
+  .join('')
 
 export const buildHtml = options => `
 <!DOCTYPE html>
@@ -194,14 +207,14 @@ export const buildHtml = options => `
       </div>
       <div class="mt-8">
         ${options.note ? `
-          <p class="text-gray-500 text-sm mt-2">
+          <p class="text-gray-500 mt-2">
             ${options.note}
           </p>
         ` : ''}
-        <p class="text-gray-500 text-sm mt-2 text-center">
+        <p class="text-gray-500 mt-2">
           Make all cheques payable to <strong>${options.chequeName}</strong>
         </p>
-        <p class="text-gray-500 text-xs mt-2 text-center">
+        <p class="text-gray-500 mt-2">
           If you have any questions about this document, please call <strong>${options.phone}</strong> or send an email to <strong>${options.email}</strong>
         </p>
       </div>

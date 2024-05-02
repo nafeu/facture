@@ -12,10 +12,11 @@ export const DOCUMENT_TYPE_LABEL_MAPPING = {
 
 export const VALID_DOCUMENT_TYPES = Object.keys(DOCUMENT_TYPE_LABEL_MAPPING)
 
-export const DEFAULT_INVOICE_TYPE = DOCUMENT_TYPE_INVOICE
-export const DEFAULT_DELIMITER    = '|'
-export const DEFAULT_ITEMS        = []
 export const DEFAULT_CURRENCY     = 'USD'
+export const DEFAULT_DELIMITER    = '|'
+export const DEFAULT_INVOICE_TYPE = DOCUMENT_TYPE_INVOICE
+export const DEFAULT_ITEMS        = []
+export const DEFAULT_NOTES        = []
 
 export const RATE_INTERVAL_LABELS = {
   d:     'day',
@@ -34,9 +35,6 @@ export const RATE_INTERVAL_LABELS = {
 
 // Reference: https://github.com/bitfactory-robin-martijn/common-currency/blob/main/common-currency.json
 export const CURRENCY_DATA = {
-  USD: { symbol: '$', code: 'USD', name: 'US Dollar', namePlural: 'US dollars' },
-  CAD: { symbol: 'CA$', code: 'CAD', name: 'Canadian Dollar', namePlural: 'Canadian dollars' },
-  EUR: { symbol: '€', code: 'EUR', name: 'Euro', namePlural: 'euros' },
   AED: { symbol: 'AED', code: 'AED', name: 'United Arab Emirates Dirham', namePlural: 'UAE dirhams' },
   AFN: { symbol: 'Af', code: 'AFN', name: 'Afghan Afghani', namePlural: 'Afghan Afghanis' },
   ALL: { symbol: 'ALL', code: 'ALL', name: 'Albanian Lek', namePlural: 'Albanian lekë' },
@@ -55,6 +53,7 @@ export const CURRENCY_DATA = {
   BWP: { symbol: 'BWP', code: 'BWP', name: 'Botswanan Pula', namePlural: 'Botswanan pulas' },
   BYN: { symbol: 'Br', code: 'BYN', name: 'Belarusian Ruble', namePlural: 'Belarusian rubles' },
   BZD: { symbol: 'BZ$', code: 'BZD', name: 'Belize Dollar', namePlural: 'Belize dollars' },
+  CAD: { symbol: 'CA$', code: 'CAD', name: 'Canadian Dollar', namePlural: 'Canadian dollars' },
   CDF: { symbol: 'CDF', code: 'CDF', name: 'Congolese Franc', namePlural: 'Congolese francs' },
   CHF: { symbol: 'CHF', code: 'CHF', name: 'Swiss Franc', namePlural: 'Swiss francs' },
   CLP: { symbol: 'CL$', code: 'CLP', name: 'Chilean Peso', namePlural: 'Chilean pesos' },
@@ -72,6 +71,7 @@ export const CURRENCY_DATA = {
   EGP: { symbol: 'EGP', code: 'EGP', name: 'Egyptian Pound', namePlural: 'Egyptian pounds' },
   ERN: { symbol: 'Nfk', code: 'ERN', name: 'Eritrean Nakfa', namePlural: 'Eritrean nakfas' },
   ETB: { symbol: 'Br', code: 'ETB', name: 'Ethiopian Birr', namePlural: 'Ethiopian birrs' },
+  EUR: { symbol: '€', code: 'EUR', name: 'Euro', namePlural: 'euros' },
   GBP: { symbol: '£', code: 'GBP', name: 'British Pound Sterling', namePlural: 'British pounds sterling' },
   GEL: { symbol: 'GEL', code: 'GEL', name: 'Georgian Lari', namePlural: 'Georgian laris' },
   GHS: { symbol: 'GH₵', code: 'GHS', name: 'Ghanaian Cedi', namePlural: 'Ghanaian cedis' },
@@ -144,6 +144,7 @@ export const CURRENCY_DATA = {
   TZS: { symbol: 'TSh', code: 'TZS', name: 'Tanzanian Shilling', namePlural: 'Tanzanian shillings' },
   UAH: { symbol: '₴', code: 'UAH', name: 'Ukrainian Hryvnia', namePlural: 'Ukrainian hryvnias' },
   UGX: { symbol: 'USh', code: 'UGX', name: 'Ugandan Shilling', namePlural: 'Ugandan shillings' },
+  USD: { symbol: '$', code: 'USD', name: 'US Dollar', namePlural: 'US dollars' },
   UYU: { symbol: '$U', code: 'UYU', name: 'Uruguayan Peso', namePlural: 'Uruguayan pesos' },
   UZS: { symbol: 'UZS', code: 'UZS', name: 'Uzbekistan Som', namePlural: 'Uzbekistan som' },
   VEF: { symbol: 'Bs.F.', code: 'VEF', name: 'Venezuelan Bolívar', namePlural: 'Venezuelan bolívars' },
