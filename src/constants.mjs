@@ -15,7 +15,6 @@ export const VALID_DOCUMENT_TYPES = Object.keys(DOCUMENT_TYPE_LABEL_MAPPING)
 export const DEFAULT_CURRENCY     = 'USD'
 export const DEFAULT_DELIMITER    = '|'
 export const DEFAULT_INVOICE_TYPE = DOCUMENT_TYPE_INVOICE
-export const DEFAULT_ITEMS        = []
 export const DEFAULT_NOTES        = []
 
 export const RATE_INTERVAL_LABELS = {

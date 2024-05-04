@@ -1,5 +1,20 @@
 import { CURRENCY_DATA, DOCUMENT_TYPE_LABEL_MAPPING, RATE_INTERVAL_LABELS } from './constants.mjs'
 
+let items = [];
+
+export const collectItem = (item, _) => {
+  const newItem = { item, details: [] };
+  items.push(newItem);
+  return items;
+}
+
+export const collectDetail = (detail, _) => {
+  if (items.length > 0) {
+    items[items.length - 1].details.push(detail);
+  }
+  return items;
+}
+
 export const getCurrentDateInYYYYMMDD = () => {
   const date  = new Date();
   const year  = date.getFullYear();
@@ -12,14 +27,16 @@ export const getCurrentDateInYYYYMMDD = () => {
 export const collectMultipleStringArguments = (item, previousItems) => previousItems.concat(item)
 
 export const processOptions = options => {
+  const delimiter         = options.delimiter
+
   const documentTypeLabel = DOCUMENT_TYPE_LABEL_MAPPING[options.type]
-  const documentId        = options.uniqueId || '[TODO: GENERATE IDs]'
+  const documentId        = options.documentId || '[TODO: GENERATE IDs]'
 
   const currencySymbol = CURRENCY_DATA[options.currency.toUpperCase()].symbol
   const currencyCode   = CURRENCY_DATA[options.currency.toUpperCase()].code
 
   const businessInfo = (() => {
-    const [businessName, ...businessDetails] = options.business.split(options.delimiter)
+    const [businessName, ...businessDetails] = options.business.split(delimiter)
 
     return {
       businessName,
@@ -28,7 +45,7 @@ export const processOptions = options => {
   })()
 
   const clientInfo = (() => {
-    const [clientName, ...clientDetails] = options.client.split(options.delimiter)
+    const [clientName, ...clientDetails] = options.client.split(delimiter)
 
     return {
       clientName,
@@ -36,12 +53,12 @@ export const processOptions = options => {
     }
   })()
 
-  const items = options.item.map(lineItem => {
-    const [service, unitsString, rateIntervalString, ...details] = lineItem.split(options.delimiter)
-
-    const hasDetails = details.length > 0;
+  const items = options.item.map(({ item, details }) => {
+    const [service, unitsString, rateIntervalString, date] = item.split(delimiter)
 
     const units = Number(unitsString)
+
+    const hasDetails = details && details.length > 0
 
     const [rateString, interval] = rateIntervalString.split('/').map(str => str.trim())
     const rate                   = Number(rateString)
@@ -52,13 +69,14 @@ export const processOptions = options => {
     const totalLabel             = `${currencySymbol}${total.toFixed(2)}`
 
     return {
+      ...(date ? ({ date }) : {}),
       service,
       units,
       ...(hasDetails ? ({ details }) : {}),
       rate,
       rateLabel,
       total,
-      totalLabel
+      totalLabel,
     }
   })
 
@@ -66,26 +84,34 @@ export const processOptions = options => {
   const subtotalLabel = `${currencySymbol}${subtotal.toFixed(2)}`
 
   const taxRate = (() => {
-    if (options.taxRate.includes('%')) {
-      return Number(options.taxRate.split('%')[0]) / 100
+    const [taxRateString] = options.taxInfo.split(delimiter)
+
+    if (taxRateString.includes('%')) {
+      return Number(taxRateString.split('%')[0]) / 100
     }
 
-    return Number(options.taxRate)
+    return Number(taxRateString)
   })()
 
   const taxRateLabel = (() => {
-    if (options.taxRate.includes('%')) {
-      return options.taxRate
+    const [taxRateString] = options.taxInfo.split(delimiter)
+
+    if (taxRateString.includes('%')) {
+      return taxRateString
     }
 
     return `${taxRate * 100}%`
   })()
+
+  const [_, taxTypeLabel, taxNumber] = options.taxInfo.split(delimiter)
 
   const taxes      = subtotal * taxRate
   const taxesLabel = `${currencySymbol}${taxes.toFixed(2)}`
 
   const total      = subtotal + (subtotal * taxRate)
   const totalLabel = `${currencySymbol}${total.toFixed(2)}`
+
+  const notes = options.note
 
   const path = options.output
     || `${options.type}_${documentId}.pdf`
@@ -101,10 +127,19 @@ export const processOptions = options => {
     items,
     subtotalLabel,
     taxesLabel,
+    taxTypeLabel,
     taxRateLabel,
+    taxNumber,
     totalLabel,
+    notes,
     path
   }
+
+  delete processedOptions.business;
+  delete processedOptions.client;
+  delete processedOptions.item;
+  delete processedOptions.detail;
+  delete processedOptions.taxInfo;
 
   return processedOptions
 }
@@ -116,12 +151,12 @@ const buildBusinessInfoMarkup = options => [
 
 const buildClientInfoMarkup = options => [
   `${options.clientName}<br/>`,
-  ...options.clientDetails.map((row, index) => `${row}${(index === options.client.length - 1) ? '' : '<br/>'}`)
+  ...options.clientDetails.map((row, index) => `${row}${(index === options.clientDetails.length - 1) ? '' : '<br/>'}`)
 ].join('')
 
 const buildDocumentItems = options => options
   .items
-  .map(({ service, details, units, rateLabel, totalLabel }) => {
+  .map(({ service, details, units, rateLabel, totalLabel, date }) => {
     const cells = `
       <td class="px-3 py-2">
         ${service}
@@ -137,9 +172,9 @@ const buildDocumentItems = options => options
 
 const buildNotes = options => options
   .notes
-  .map(({ text, classes }) => `
-    <p class="text-gray-500 mt-2 ${classes}">
-      ${text}
+  .map(note => `
+    <p class="text-gray-500 mt-2 text-sm text-center">
+      ${note}
     </p>
   `)
   .join('')
@@ -186,7 +221,7 @@ export const buildHtml = options => `
         </div>
       </div>
       <div class="overflow-x-auto">
-        <table class="w-full table-auto">
+        <table class="w-full table-auto text-sm">
           <thead>
             <tr class="bg-gray-100 text-gray-500 text-left">
               <th class="px-3 py-2 font-medium">Service</th>
@@ -202,21 +237,13 @@ export const buildHtml = options => `
       </div>
       <div class="mt-8 text-right">
         <p class="text-gray-500 text-sm">Subtotal: ${options.subtotalLabel}</p>
-        <p class="text-gray-500 text-sm">Tax (${options.taxRateLabel}): ${options.taxesLabel}</p>
-        <p class="text-2xl font-bold">Total (${options.currencyCode}): ${options.totalLabel}</p>
+        <p class="text-gray-500 text-sm">
+          Tax (${options.taxRateLabel}${options.taxTypeLabel ? ` ${options.taxTypeLabel}` : ''}): ${options.taxesLabel}
+        </p>
+        <p class="text-xl font-bold">Total: ${options.totalLabel}</p>
       </div>
       <div class="mt-8">
-        ${options.note ? `
-          <p class="text-gray-500 mt-2">
-            ${options.note}
-          </p>
-        ` : ''}
-        <p class="text-gray-500 mt-2">
-          Make all cheques payable to <strong>${options.chequeName}</strong>
-        </p>
-        <p class="text-gray-500 mt-2">
-          If you have any questions about this document, please call <strong>${options.phone}</strong> or send an email to <strong>${options.email}</strong>
-        </p>
+        ${buildNotes(options)}
       </div>
     </div>
   </body>
