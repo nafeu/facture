@@ -1,46 +1,54 @@
-import { CURRENCY_DATA, DOCUMENT_TYPE_LABEL_MAPPING, RATE_INTERVAL_LABELS } from './constants.mjs'
+import {
+  CURRENCY_DATA,
+  DOCUMENT_TYPE_LABEL_MAPPING,
+  RATE_INTERVAL_LABELS,
+} from './constants.mjs'
 
-let items = [];
+let items = []
 
-export const collectItem = (item, _) => {
-  const newItem = { item, details: [] };
-  items.push(newItem);
-  return items;
+export const collectItem = item => {
+  const newItem = { item, details: [] }
+  items.push(newItem)
+  return items
 }
 
-export const collectDetail = (detail, _) => {
+export const collectDetail = detail => {
   if (items.length > 0) {
-    items[items.length - 1].details.push(detail);
+    items[items.length - 1].details.push(detail)
   }
-  return items;
+  return items
 }
+
+export const getDateLabelFromYYYYMMDD = (inputDateString) =>
+  new Date(`${inputDateString}T00:00:00`).toDateString()
 
 export const getCurrentDateInYYYYMMDD = () => {
-  const date  = new Date();
-  const year  = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day   = date.getDate().toString().padStart(2, '0');
+  const date = new Date()
+  const year = date.getFullYear()
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const day = date.getDate().toString().padStart(2, '0')
 
-  return `${year}-${month}-${day}`;
+  return `${year}-${month}-${day}`
 }
 
-export const collectMultipleStringArguments = (item, previousItems) => previousItems.concat(item)
+export const collectMultipleStringArguments = (item, previousItems) =>
+  previousItems.concat(item)
 
-export const processOptions = options => {
-  const delimiter         = options.delimiter
+export const processOptions = (options) => {
+  const delimiter = options.delimiter
 
   const documentTypeLabel = DOCUMENT_TYPE_LABEL_MAPPING[options.type]
-  const documentId        = options.documentId || '[TODO: GENERATE IDs]'
+  const documentId = options.documentId || '[TODO: GENERATE IDs]'
 
   const currencySymbol = CURRENCY_DATA[options.currency.toUpperCase()].symbol
-  const currencyCode   = CURRENCY_DATA[options.currency.toUpperCase()].code
+  const currencyCode = CURRENCY_DATA[options.currency.toUpperCase()].code
 
   const businessInfo = (() => {
     const [businessName, ...businessDetails] = options.business.split(delimiter)
 
     return {
       businessName,
-      businessDetails
+      businessDetails,
     }
   })()
 
@@ -49,30 +57,33 @@ export const processOptions = options => {
 
     return {
       clientName,
-      clientDetails
+      clientDetails,
     }
   })()
 
   const items = options.item.map(({ item, details }) => {
-    const [service, unitsString, rateIntervalString, date] = item.split(delimiter)
+    const [service, unitsString, rateIntervalString, date] =
+      item.split(delimiter)
 
     const units = Number(unitsString)
 
     const hasDetails = details && details.length > 0
 
-    const [rateString, interval] = rateIntervalString.split('/').map(str => str.trim())
-    const rate                   = Number(rateString)
-    const intervalLabel          = interval ? ` / ${RATE_INTERVAL_LABELS[interval]}` : ''
-    const amountLabel            = `${currencySymbol}${rate.toFixed(2)}`
-    const rateLabel              = `${amountLabel}${intervalLabel}`
-    const total                  = units * rate
-    const totalLabel             = `${currencySymbol}${total.toFixed(2)}`
+    const [rateString, interval] = rateIntervalString
+      .split('/')
+      .map((str) => str.trim())
+    const rate = Number(rateString)
+    const intervalLabel = interval ? ` / ${RATE_INTERVAL_LABELS[interval]}` : ''
+    const amountLabel = `${currencySymbol}${rate.toFixed(2)}`
+    const rateLabel = `${amountLabel}${intervalLabel}`
+    const total = units * rate
+    const totalLabel = `${currencySymbol}${total.toFixed(2)}`
 
     return {
-      ...(date ? ({ date }) : {}),
+      ...(date ? { date, dateLabel: getDateLabelFromYYYYMMDD(date) } : {}),
       service,
       units,
-      ...(hasDetails ? ({ details }) : {}),
+      ...(hasDetails ? { details } : {}),
       rate,
       rateLabel,
       total,
@@ -80,7 +91,10 @@ export const processOptions = options => {
     }
   })
 
-  const subtotal      = items.reduce((sum, { total }) => { sum += total; return sum; }, 0)
+  const subtotal = items.reduce((sum, { total }) => {
+    sum += total
+    return sum
+  }, 0)
   const subtotalLabel = `${currencySymbol}${subtotal.toFixed(2)}`
 
   const taxRate = (() => {
@@ -103,18 +117,18 @@ export const processOptions = options => {
     return `${taxRate * 100}%`
   })()
 
+  // eslint-disable-next-line no-unused-vars
   const [_, taxTypeLabel, taxNumber] = options.taxInfo.split(delimiter)
 
-  const taxes      = subtotal * taxRate
+  const taxes = subtotal * taxRate
   const taxesLabel = `${currencySymbol}${taxes.toFixed(2)}`
 
-  const total      = subtotal + (subtotal * taxRate)
+  const total = subtotal + subtotal * taxRate
   const totalLabel = `${currencySymbol}${total.toFixed(2)}`
 
   const notes = options.note
 
-  const path = options.output
-    || `${options.type}_${documentId}.pdf`
+  const path = options.output || `${options.type}_${documentId}.pdf`
 
   const processedOptions = {
     ...options,
@@ -132,61 +146,86 @@ export const processOptions = options => {
     taxNumber,
     totalLabel,
     notes,
-    path
+    path,
   }
 
-  delete processedOptions.business;
-  delete processedOptions.client;
-  delete processedOptions.item;
-  delete processedOptions.detail;
-  delete processedOptions.taxInfo;
+  delete processedOptions.business
+  delete processedOptions.client
+  delete processedOptions.item
+  delete processedOptions.detail
+  delete processedOptions.taxInfo
 
   return processedOptions
 }
 
-const buildBusinessInfoMarkup = options => [
-  `<p class="text-gray-500 font-bold">${options.businessName}</p>`,
-  ...options.businessDetails.map(businessDetail => `<p class="text-gray-500 text-sm">${businessDetail}</p>`)
-].join('')
+const buildBusinessInfoMarkup = (options) =>
+  [
+    `<p class="text-gray-500 font-bold">${options.businessName}</p>`,
+    ...options.businessDetails.map(
+      (businessDetail) =>
+        `<p class="text-gray-500 text-sm">${businessDetail}</p>`
+    ),
+  ].join('')
 
-const buildClientInfoMarkup = options => [
-  `${options.clientName}<br/>`,
-  ...options.clientDetails.map((row, index) => `${row}${(index === options.clientDetails.length - 1) ? '' : '<br/>'}`)
-].join('')
+const buildClientInfoMarkup = (options) =>
+  [
+    `${options.clientName}<br/>`,
+    ...options.clientDetails.map(
+      (row, index) =>
+        `${row}${index === options.clientDetails.length - 1 ? '' : '<br/>'}`
+    ),
+  ].join('')
 
-const buildDocumentItems = options => options
-  .items
-  .map(({ service, details, units, rateLabel, totalLabel, date }) => {
-    const cells = `
+const buildDocumentItems = (options) =>
+  options.items
+    .map(({ service, details, units, rateLabel, totalLabel, dateLabel }) => {
+      const cells = `
       <td class="px-3 py-2">
-        ${service}
-        ${details ? '<br />' + details.map(detail => `<span class="text-sm">&nbsp;-&nbsp;${detail}</span>`).join('<br />') : ''}
+        ${service}${
+        dateLabel ? ` <span class="text-gray-500">${dateLabel}</span>` : ''
+      }
+        ${
+          details
+            ? '<br />' +
+              details
+                .map(
+                  (detail) =>
+                    `<span class="text-sm">&nbsp;-&nbsp;${detail}</span>`
+                )
+                .join('<br />')
+            : ''
+        }
       </td>
       <td class="px-3 py-2">${units}</td>
       <td class="px-3 py-2">${rateLabel}</td>
       <td class="px-3 py-2 text-right">${totalLabel}</td>
-    `;
+    `
 
-    return `<tr class="border-b border-gray-200">${cells}</tr>`;
-  }).join('')
+      return `<tr class="border-b border-gray-200">${cells}</tr>`
+    })
+    .join('')
 
-const buildNotes = options => options
-  .notes
-  .map(note => `
+const buildNotes = (options) =>
+  options.notes
+    .map(
+      (note) => `
     <p class="text-gray-500 mt-2 text-sm text-center">
       ${note}
     </p>
-  `)
-  .join('')
+  `
+    )
+    .join('')
 
-export const buildHtml = options => `
+export const buildHtml = (options) => `
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>[TODO: ADD TITLE]</title>
+    <title>${options.documentTypeLabel} ${options.documentId} - ${
+  options.businessName
+}</title>
     <style>
       :root {}
 
@@ -207,8 +246,14 @@ export const buildHtml = options => `
         </div>
         <div class="text-right">
           <h1 class="text-2xl font-bold">${options.documentTypeLabel}</h1>
-          <p class="text-gray-500 text-sm">${options.documentTypeLabel} #: ${options.documentId}</p>
-          ${options.taxNumber ? `<p class="text-gray-500 text-sm">Tax #: ${options.taxNumber}` : ''}
+          <p class="text-gray-500 text-sm">${options.documentTypeLabel} #: ${
+  options.documentId
+}</p>
+          ${
+            options.taxNumber
+              ? `<p class="text-gray-500 text-sm">Tax #: ${options.taxNumber}`
+              : ''
+          }
           <p class="text-gray-500 text-sm">Date: ${options.date}</p>
         </div>
       </div>
@@ -227,7 +272,9 @@ export const buildHtml = options => `
               <th class="px-3 py-2 font-medium">Service</th>
               <th class="px-3 py-2 font-medium">Units</th>
               <th class="px-3 py-2 font-medium">Rate</th>
-              <th class="px-3 py-2 font-medium text-right">Total (${options.currencyCode})</th>
+              <th class="px-3 py-2 font-medium text-right">Total (${
+                options.currencyCode
+              })</th>
             </tr>
           </thead>
           <tbody>
@@ -238,7 +285,9 @@ export const buildHtml = options => `
       <div class="mt-8 text-right">
         <p class="text-gray-500 text-sm">Subtotal: ${options.subtotalLabel}</p>
         <p class="text-gray-500 text-sm">
-          Tax (${options.taxRateLabel}${options.taxTypeLabel ? ` ${options.taxTypeLabel}` : ''}): ${options.taxesLabel}
+          Tax (${options.taxRateLabel}${
+  options.taxTypeLabel ? ` ${options.taxTypeLabel}` : ''
+}): ${options.taxesLabel}
         </p>
         <p class="text-xl font-bold">Total: ${options.totalLabel}</p>
       </div>
