@@ -33,7 +33,7 @@ describe('program.parse', () => {
       'invoicepaid',
       '-y',
       '-d',
-      '2024-05-03'
+      '2024-05-03',
     ]
 
     program.parse(process.argv)

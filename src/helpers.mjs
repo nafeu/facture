@@ -27,9 +27,8 @@ export const getRandomHexString = () => {
   return result.toUpperCase()
 }
 
-export const generateUniqueIdFromYYYYMMDD = inputDateString => (
+export const generateUniqueIdFromYYYYMMDD = (inputDateString) =>
   `${inputDateString.split('-').join('')}${getRandomHexString()}`
-)
 
 export const getDateLabelFromYYYYMMDD = (inputDateString) =>
   new Date(`${inputDateString}T00:00:00`).toDateString()
@@ -50,7 +49,8 @@ export const processOptions = (options) => {
   const delimiter = options.delimiter
 
   const documentTypeLabel = DOCUMENT_TYPE_LABEL_MAPPING[options.type]
-  const documentId = options.documentId || generateUniqueIdFromYYYYMMDD(options.date)
+  const documentId =
+    options.documentId || generateUniqueIdFromYYYYMMDD(options.date)
 
   const currencySymbol = CURRENCY_DATA[options.currency.toUpperCase()].symbol
   const currencyCode = CURRENCY_DATA[options.currency.toUpperCase()].code
@@ -266,8 +266,8 @@ export const buildHtml = (options) => `
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.tailwindcss.com"></script>
     <title>${options.documentTypeLabel} ${options.documentId} - ${
-  options.businessName
-}</title>
+      options.businessName
+    }</title>
     <style>
       :root {}
 
@@ -289,8 +289,8 @@ export const buildHtml = (options) => `
         <div class="text-right">
           <h1 class="text-2xl font-bold">${options.documentTypeLabel}</h1>
           <p class="text-gray-500 text-sm">${options.documentTypeLabel} #: ${
-  options.documentId
-}</p>
+            options.documentId
+          }</p>
           ${
             options.taxNumber
               ? `<p class="text-gray-500 text-sm">Tax #: ${options.taxNumber}`
@@ -328,8 +328,8 @@ export const buildHtml = (options) => `
         <p class="text-gray-500 text-sm">Subtotal: ${options.subtotalLabel}</p>
         <p class="text-gray-500 text-sm">
           Tax (${options.taxRateLabel}${
-  options.taxTypeLabel ? ` ${options.taxTypeLabel}` : ''
-}): ${options.taxesLabel}
+            options.taxTypeLabel ? ` ${options.taxTypeLabel}` : ''
+          }): ${options.taxesLabel}
         </p>
         <p class="text-xl font-bold">Total: ${options.totalLabel}</p>
       </div>

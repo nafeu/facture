@@ -1,0 +1,10 @@
+node_modules
+.git
+.github
+src
+tests
+*.config.mjs
+*.config.js
+*.spec.mjs
+.*rc
+.node-version

@@ -26,7 +26,7 @@ export const handleGenerate = async (options) => {
     processedOptions = processOptions(options)
   } catch (error) {
     console.log(error.message)
-    // eslint-disable-next-line no-undef
+     
     process.exit(1)
   }
 
@@ -121,6 +121,12 @@ program
     getCurrentDateInYYYYMMDD()
   )
   .option('-o, --output <string>', 'Name of the pdf file to output')
-  .option('-y, --dryRun', 'Check if options can be processed to build a valid pdf output')
-  .option('-l, --log', 'Log the processed options (subtotal, total, display labels, etc.)')
+  .option(
+    '-y, --dryRun',
+    'Check if options can be processed to build a valid pdf output'
+  )
+  .option(
+    '-l, --log',
+    'Log the processed options (subtotal, total, display labels, etc.)'
+  )
   .action(handleGenerate)

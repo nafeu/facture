@@ -367,7 +367,7 @@ describe('buildHtml', () => {
                 <tbody>
                   <tr class="border-b border-gray-200">
                     <td class="px-3 py-2">
-                      Work Stuff <span class=\"text-gray-500\">Wed Jan 3 2024</span>
+                      Work Stuff <span class="text-gray-500">Wed Jan 3 2024</span>
 
                     </td>
                     <td class="px-3 py-2">1</td>
@@ -375,7 +375,7 @@ describe('buildHtml', () => {
                     <td class="px-3 py-2 text-right">CA$45.00</td>
                   </tr><tr class="border-b border-gray-200">
                     <td class="px-3 py-2">
-                      More Work Stuff <span class=\"text-gray-500\">Thu Jan 4 2024</span>
+                      More Work Stuff <span class="text-gray-500">Thu Jan 4 2024</span>
                       <br /><span class="text-sm">&nbsp;-&nbsp;Task1</span><br /><span class="text-sm">&nbsp;-&nbsp;Task2</span><br /><span class="text-sm">&nbsp;-&nbsp;Task3</span>
                     </td>
                     <td class="px-3 py-2">2</td>
@@ -421,9 +421,13 @@ describe('buildHtml', () => {
         documentId: 'NN0141233',
         type: 'invoice',
         businessName: 'Nafeu Nasir Media Solutions',
-        businessDetails: [ '9-4123 Racoon Street', 'Toronto, ON, Canada', 'M6H 4K1' ],
+        businessDetails: [
+          '9-4123 Racoon Street',
+          'Toronto, ON, Canada',
+          'M6H 4K1',
+        ],
         clientName: 'Client A',
-        clientDetails: [ '5 ABC Avenue', 'Funtown, MI, US', '44124' ],
+        clientDetails: ['5 ABC Avenue', 'Funtown, MI, US', '44124'],
         currencyCode: 'USD',
         currencySymbol: '$',
         documentTypeLabel: 'Invoice',
@@ -435,8 +439,8 @@ describe('buildHtml', () => {
             rate: 375,
             rateLabel: '$375.00',
             total: 375,
-            totalLabel: '$375.00'
-          }
+            totalLabel: '$375.00',
+          },
         ],
         subtotalLabel: '$375.00',
         taxesLabel: '$41.25',
@@ -445,7 +449,7 @@ describe('buildHtml', () => {
         taxNumber: '88881514',
         totalLabel: '$416.25',
         notes: [],
-        path: 'invoice_NN0141233.pdf'
+        path: 'invoice_NN0141233.pdf',
       }
 
       const result = buildHtml(exampleProcessedOptions)
