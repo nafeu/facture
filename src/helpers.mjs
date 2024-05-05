@@ -19,6 +19,18 @@ export const collectDetail = (detail) => {
   return items
 }
 
+export const getRandomHexString = () => {
+  const chars = '0123456789abcdef'
+  let result = ''
+  for (var i = 6; i > 0; --i)
+    result += chars[Math.round(Math.random() * (chars.length - 1))]
+  return result.toUpperCase()
+}
+
+export const generateUniqueIdFromYYYYMMDD = inputDateString => (
+  `${inputDateString.split('-').join('')}${getRandomHexString()}`
+)
+
 export const getDateLabelFromYYYYMMDD = (inputDateString) =>
   new Date(`${inputDateString}T00:00:00`).toDateString()
 
@@ -38,7 +50,7 @@ export const processOptions = (options) => {
   const delimiter = options.delimiter
 
   const documentTypeLabel = DOCUMENT_TYPE_LABEL_MAPPING[options.type]
-  const documentId = options.documentId || '[TODO: GENERATE IDs]'
+  const documentId = options.documentId || generateUniqueIdFromYYYYMMDD(options.date)
 
   const currencySymbol = CURRENCY_DATA[options.currency.toUpperCase()].symbol
   const currencyCode = CURRENCY_DATA[options.currency.toUpperCase()].code
@@ -102,6 +114,14 @@ export const processOptions = (options) => {
   const taxRate = (() => {
     const [taxRateString] = options.taxInfo.split(delimiter)
 
+    if (
+      taxRateString === undefined ||
+      taxRateString === null ||
+      taxRateString === ''
+    ) {
+      return 0
+    }
+
     if (taxRateString.includes('%')) {
       return Number(taxRateString.split('%')[0]) / 100
     }
@@ -111,6 +131,14 @@ export const processOptions = (options) => {
 
   const taxRateLabel = (() => {
     const [taxRateString] = options.taxInfo.split(delimiter)
+
+    if (
+      taxRateString === undefined ||
+      taxRateString === null ||
+      taxRateString === ''
+    ) {
+      return '0%'
+    }
 
     if (taxRateString.includes('%')) {
       return taxRateString

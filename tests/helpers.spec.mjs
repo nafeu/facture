@@ -175,6 +175,76 @@ describe('processOptions', () => {
       expect(result.path).toEqual('invoice_NN0141233.pdf')
     })
   })
+  describe('case 3', () => {
+    it('should return a processed set of options', () => {
+      const options = {
+        business:
+          'Nafeu Nasir Media Solutions|9-4123 Racoon Street|Toronto, ON, Canada|M6H 4K1',
+        client: 'Client A|5 ABC Avenue|Funtown, MI, US|44124',
+        currency: 'USD',
+        date: '2024-01-07',
+        delimiter: '|',
+        item: [
+          {
+            details: [],
+            item: 'Freelance Stuff||200',
+          },
+        ],
+        detail: [
+          {
+            details: [],
+            item: 'Freelance Stuff||200',
+          },
+        ],
+        note: [],
+        taxInfo: '||88881514',
+        type: 'receipt',
+      }
+
+      const result = processOptions(options)
+
+      expect(result.documentTypeLabel).toEqual('Receipt')
+      expect(result.documentId.length).toEqual(14)
+      expect(result.currencySymbol).toEqual('$')
+      expect(result.currencyCode).toEqual('USD')
+
+      expect(result.businessName).toEqual('Nafeu Nasir Media Solutions')
+      expect(result.businessDetails).toEqual([
+        '9-4123 Racoon Street',
+        'Toronto, ON, Canada',
+        'M6H 4K1',
+      ])
+
+      expect(result.clientName).toEqual('Client A')
+      expect(result.clientDetails).toEqual([
+        '5 ABC Avenue',
+        'Funtown, MI, US',
+        '44124',
+      ])
+
+      expect(result.taxTypeLabel).toEqual(null)
+      expect(result.taxRateLabel).toEqual('0%')
+      expect(result.taxNumber).toEqual('88881514')
+
+      expect(result.items).toEqual([
+        {
+          isFlat: true,
+          rate: 200,
+          rateLabel: '$200.00',
+          service: 'Freelance Stuff',
+          total: 200,
+          totalLabel: '$200.00',
+          units: 1,
+        },
+      ])
+
+      expect(result.subtotalLabel).toEqual(`$200.00`)
+      expect(result.taxesLabel).toEqual(`$0.00`)
+      expect(result.totalLabel).toEqual(`$200.00`)
+
+      expect(result.path.length).toEqual(26)
+    })
+  })
 })
 
 describe('buildHtml', () => {
