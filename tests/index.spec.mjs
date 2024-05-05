@@ -1,6 +1,6 @@
 import { program } from '../src/index.mjs'
 
-describe('CLI Option Parsing', () => {
+describe('program.parse', () => {
   it('should parse the input arguments into options correctly', () => {
     process.argv = [
       'node',
@@ -32,6 +32,8 @@ describe('CLI Option Parsing', () => {
       '-t',
       'invoicepaid',
       '-y',
+      '-d',
+      '2024-05-03'
     ]
 
     program.parse(process.argv)

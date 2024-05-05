@@ -1,5 +1,6 @@
 import puppeteer from 'puppeteer'
 import { Command } from 'commander'
+import yaml from 'js-yaml'
 
 import {
   DEFAULT_CURRENCY,
@@ -19,12 +20,28 @@ import {
 } from './helpers.mjs'
 
 export const handleGenerate = async (options) => {
-  if (options.dryRun) return
+  let processedOptions
+
+  try {
+    processedOptions = processOptions(options)
+  } catch (error) {
+    console.log(error.message)
+    // eslint-disable-next-line no-undef
+    process.exit(1)
+  }
+
+  if (options.log) {
+    console.log(`[ facture v0.1.0 ] Processed options:\n`)
+    console.log(yaml.dump(processedOptions))
+  }
+
+  if (options.dryRun) {
+    console.log(`[ facture v0.1.0 ] Dry run successful, options are valid`)
+    return
+  }
 
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
-
-  const processedOptions = processOptions(options)
 
   await page.setContent(buildHtml(processedOptions), {
     waitUntil: 'networkidle0',
@@ -56,8 +73,8 @@ program
     'The unique ID for your document (ie. Invoice ID, Receipt ID)'
   )
   .option(
-    '-l, --delimiter <character>',
-    'The character to split multi-line input params (ie. business, client)',
+    '-e, --delimiter <character>',
+    'The character to split multi-part params such as business, client, items and taxInfo',
     DEFAULT_DELIMITER
   )
   .option(
@@ -104,5 +121,6 @@ program
     getCurrentDateInYYYYMMDD()
   )
   .option('-o, --output <string>', 'Name of the pdf file to output')
-  .option('-y, --dryRun', 'Evaluate the options for generating the document')
+  .option('-y, --dryRun', 'Check if options can be processed to build a valid pdf output')
+  .option('-l, --log', 'Log the processed options (subtotal, total, display labels, etc.)')
   .action(handleGenerate)

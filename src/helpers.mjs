@@ -6,13 +6,13 @@ import {
 
 let items = []
 
-export const collectItem = item => {
+export const collectItem = (item) => {
   const newItem = { item, details: [] }
   items.push(newItem)
   return items
 }
 
-export const collectDetail = detail => {
+export const collectDetail = (detail) => {
   if (items.length > 0) {
     items[items.length - 1].details.push(detail)
   }
@@ -65,7 +65,8 @@ export const processOptions = (options) => {
     const [service, unitsString, rateIntervalString, date] =
       item.split(delimiter)
 
-    const units = Number(unitsString)
+    const units = Math.max(Number(unitsString || 0), 1)
+    const isFlat = Number(unitsString || 0) < 1
 
     const hasDetails = details && details.length > 0
 
@@ -88,6 +89,7 @@ export const processOptions = (options) => {
       rateLabel,
       total,
       totalLabel,
+      ...(isFlat ? { isFlat } : {}),
     }
   })
 
@@ -120,13 +122,14 @@ export const processOptions = (options) => {
   // eslint-disable-next-line no-unused-vars
   const [_, taxTypeLabel, taxNumber] = options.taxInfo.split(delimiter)
 
+  const hasTaxTypeLabel = taxTypeLabel && taxTypeLabel.length > 0
   const taxes = subtotal * taxRate
   const taxesLabel = `${currencySymbol}${taxes.toFixed(2)}`
 
   const total = subtotal + subtotal * taxRate
   const totalLabel = `${currencySymbol}${total.toFixed(2)}`
 
-  const notes = options.note
+  const notes = [...options.note]
 
   const path = options.output || `${options.type}_${documentId}.pdf`
 
@@ -141,7 +144,7 @@ export const processOptions = (options) => {
     items,
     subtotalLabel,
     taxesLabel,
-    taxTypeLabel,
+    ...(hasTaxTypeLabel ? { taxTypeLabel } : { taxTypeLabel: null }),
     taxRateLabel,
     taxNumber,
     totalLabel,
@@ -151,8 +154,9 @@ export const processOptions = (options) => {
 
   delete processedOptions.business
   delete processedOptions.client
-  delete processedOptions.item
   delete processedOptions.detail
+  delete processedOptions.item
+  delete processedOptions.note
   delete processedOptions.taxInfo
 
   return processedOptions
@@ -178,12 +182,21 @@ const buildClientInfoMarkup = (options) =>
 
 const buildDocumentItems = (options) =>
   options.items
-    .map(({ service, details, units, rateLabel, totalLabel, dateLabel }) => {
-      const cells = `
+    .map(
+      ({
+        service,
+        details,
+        units,
+        rateLabel,
+        totalLabel,
+        dateLabel,
+        isFlat,
+      }) => {
+        const cells = `
       <td class="px-3 py-2">
         ${service}${
-        dateLabel ? ` <span class="text-gray-500">${dateLabel}</span>` : ''
-      }
+          dateLabel ? ` <span class="text-gray-500">${dateLabel}</span>` : ''
+        }
         ${
           details
             ? '<br />' +
@@ -196,13 +209,14 @@ const buildDocumentItems = (options) =>
             : ''
         }
       </td>
-      <td class="px-3 py-2">${units}</td>
+      <td class="px-3 py-2">${isFlat ? '' : units}</td>
       <td class="px-3 py-2">${rateLabel}</td>
       <td class="px-3 py-2 text-right">${totalLabel}</td>
     `
 
-      return `<tr class="border-b border-gray-200">${cells}</tr>`
-    })
+        return `<tr class="border-b border-gray-200">${cells}</tr>`
+      }
+    )
     .join('')
 
 const buildNotes = (options) =>
