@@ -1,6 +1,16 @@
+import dotenv from 'dotenv'
+import path from 'path'
 import puppeteer from 'puppeteer'
-import { Command } from 'commander'
 import yaml from 'js-yaml'
+import { Command } from 'commander'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+const envPath = path.resolve(__dirname, '../.env')
+
+dotenv.config({ path: envPath })
 
 import {
   DEFAULT_CURRENCY,
@@ -8,6 +18,7 @@ import {
   DEFAULT_INVOICE_TYPE,
   DEFAULT_NOTES,
   VALID_DOCUMENT_TYPES,
+  VERSION,
 } from './constants.mjs'
 
 import {
@@ -23,20 +34,22 @@ export const handleGenerate = async (options) => {
   let processedOptions
 
   try {
-    processedOptions = processOptions(options)
+    processedOptions = await processOptions(options)
   } catch (error) {
     console.log(error.message)
-     
+
     process.exit(1)
   }
 
   if (options.log) {
-    console.log(`[ facture v0.1.0 ] Processed options:\n`)
+    console.log(`[ facture v${VERSION} ] Processed options:\n`)
     console.log(yaml.dump(processedOptions))
   }
 
   if (options.dryRun) {
-    console.log(`[ facture v0.1.0 ] Dry run successful, options are valid`)
+    console.log(
+      `[ facture v${VERSION} ] Dry run successful, options are valid. (Note: Dry run does NOT apply currency conversion via exchangerates_data-api)`
+    )
     return
   }
 
@@ -56,7 +69,7 @@ export const handleGenerate = async (options) => {
   await browser.close()
 
   console.log(
-    `[ facture v0.1.0 ] Document exported successfully to ${processedOptions.path}`
+    `[ facture v${VERSION} ] Document exported successfully to ${processedOptions.path}`
   )
 }
 
@@ -67,7 +80,7 @@ program
   .description(
     'Generate sleek and minimal invoices, quotes or receipts as PDFs'
   )
-  .version('0.1.0')
+  .version(VERSION)
   .option(
     '-u, --documentId <string>',
     'The unique ID for your document (ie. Invoice ID, Receipt ID)'
@@ -110,6 +123,10 @@ program
     '-r, --currency <currency_code>',
     'Three digit currency code (ie. USD, CAD)',
     DEFAULT_CURRENCY
+  )
+  .option(
+    '-f, --fromCurrency <currency_code>',
+    'Three digit currency code to convert from, requires API Key (apilayer.com/marketplace/exchangerates_data-api)'
   )
   .option(
     '-x, --taxInfo <rate|type(optional)|number(optional)>',

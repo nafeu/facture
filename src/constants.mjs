@@ -1,3 +1,10 @@
+import { readFile } from 'node:fs/promises'
+
+const fileUrl = new URL('../package.json', import.meta.url)
+const parsedPackageJSON = JSON.parse(await readFile(fileUrl, 'utf8'))
+
+export const VERSION = parsedPackageJSON.version
+
 export const DOCUMENT_TYPE_INVOICE = 'invoice'
 export const DOCUMENT_TYPE_INVOICE_PAID = 'invoicepaid'
 export const DOCUMENT_TYPE_QUOTE = 'quote'
@@ -751,3 +758,7 @@ export const CURRENCY_DATA = {
     namePlural: 'Zimbabwean Dollar',
   },
 }
+
+// https://apilayer.com/marketplace/exchangerates_data-api
+export const EXCHANGE_RATES_API_URL =
+  'https://api.apilayer.com/exchangerates_data/timeseries'

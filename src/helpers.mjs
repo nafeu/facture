@@ -1,10 +1,19 @@
 import {
   CURRENCY_DATA,
   DOCUMENT_TYPE_LABEL_MAPPING,
+  DEFAULT_DELIMITER,
   RATE_INTERVAL_LABELS,
+  EXCHANGE_RATES_API_URL,
 } from './constants.mjs'
 
 let items = []
+
+export const toKebabCase = (str) => {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
 
 export const collectItem = (item) => {
   const newItem = { item, details: [] }
@@ -45,7 +54,10 @@ export const getCurrentDateInYYYYMMDD = () => {
 export const collectMultipleStringArguments = (item, previousItems) =>
   previousItems.concat(item)
 
-export const processOptions = (options) => {
+export const processOptions = async (
+  options,
+  getExchangeRates = getHistoricalExchangeRates
+) => {
   const delimiter = options.delimiter
 
   const documentTypeLabel = DOCUMENT_TYPE_LABEL_MAPPING[options.type]
@@ -54,6 +66,8 @@ export const processOptions = (options) => {
 
   const currencySymbol = CURRENCY_DATA[options.currency.toUpperCase()].symbol
   const currencyCode = CURRENCY_DATA[options.currency.toUpperCase()].code
+
+  let fromCurrencyCode, exchangeRates
 
   const businessInfo = (() => {
     const [businessName, ...businessDetails] = options.business.split(delimiter)
@@ -73,6 +87,47 @@ export const processOptions = (options) => {
     }
   })()
 
+  const isConvertedRate = options.fromCurrency && !options.dryRun
+
+  if (isConvertedRate) {
+    fromCurrencyCode = CURRENCY_DATA[options.fromCurrency.toUpperCase()].code
+
+    let startDate, endDate
+
+    const allDates = [
+      ...new Set([
+        ...options.item.map(
+          ({ item }) =>
+            item.split(DEFAULT_DELIMITER)[
+              item.split(DEFAULT_DELIMITER).length - 1
+            ]
+        ),
+        options.date,
+      ]),
+    ].filter((item) => item !== '')
+
+    if (!allDates || allDates.length === 0) {
+      throw new Error('The array of dates cannot be empty')
+    }
+
+    if (allDates.length === 1) {
+      startDate = allDates[0]
+      endDate = allDates[0]
+    } else {
+      const sortedDates = allDates.sort((a, b) => new Date(a) - new Date(b))
+
+      startDate = sortedDates[0]
+      endDate = sortedDates[sortedDates.length - 1]
+    }
+
+    exchangeRates = await getExchangeRates({
+      startDate,
+      endDate,
+      fromCurrency: fromCurrencyCode,
+      toCurrency: currencyCode,
+    })
+  }
+
   const items = options.item.map(({ item, details }) => {
     const [service, unitsString, rateIntervalString, date] =
       item.split(delimiter)
@@ -80,23 +135,36 @@ export const processOptions = (options) => {
     const units = Math.max(Number(unitsString || 0), 1)
     const isFlat = Number(unitsString || 0) < 1
 
-    const hasDetails = details && details.length > 0
-
     const [rateString, interval] = rateIntervalString
       .split('/')
       .map((str) => str.trim())
-    const rate = Number(rateString)
+    const initialRate = Number(rateString)
+    const transactionDate = date || options.date
+    const rate = isConvertedRate
+      ? Number(rateString) * exchangeRates[transactionDate]
+      : Number(rateString)
     const intervalLabel = interval ? ` / ${RATE_INTERVAL_LABELS[interval]}` : ''
     const amountLabel = `${currencySymbol}${rate.toFixed(2)}`
     const rateLabel = `${amountLabel}${intervalLabel}`
     const total = units * rate
     const totalLabel = `${currencySymbol}${total.toFixed(2)}`
 
+    let parsedDetails = [...(details || [])]
+
+    if (isConvertedRate) {
+      parsedDetails = [
+        ...parsedDetails,
+        `${initialRate.toFixed(2)} ${fromCurrencyCode} = ${rate.toFixed(2)} ${currencyCode} on ${transactionDate}`,
+      ]
+    }
+
+    const hasDetails = parsedDetails.length > 0
+
     return {
       ...(date ? { date, dateLabel: getDateLabelFromYYYYMMDD(date) } : {}),
       service,
       units,
-      ...(hasDetails ? { details } : {}),
+      ...(hasDetails ? { details: parsedDetails } : {}),
       rate,
       rateLabel,
       total,
@@ -159,7 +227,7 @@ export const processOptions = (options) => {
 
   const notes = [...options.note]
 
-  const path = options.output || `${options.type}_${documentId}.pdf`
+  const path = `${toKebabCase(businessInfo.businessName)}-${options.type}${options.output ? `-${toKebabCase(options.output)}` : ''}-${documentId}.pdf`
 
   const processedOptions = {
     ...options,
@@ -340,3 +408,43 @@ export const buildHtml = (options) => `
   </body>
 </html>
 `
+
+export const getHistoricalExchangeRates = async ({
+  startDate,
+  endDate,
+  fromCurrency,
+  toCurrency,
+}) => {
+  const url = `${EXCHANGE_RATES_API_URL}?start_date=${startDate}&end_date=${endDate}&base=${fromCurrency}&symbols=${toCurrency}`
+
+  const headers = new Headers()
+  headers.append('apikey', process.env.EXCHANGE_RATES_API_KEY)
+
+  const requestOptions = {
+    method: 'GET',
+    headers: headers,
+  }
+
+  try {
+    const response = await fetch(url, requestOptions)
+    if (!response.ok) {
+      throw new Error(`Error fetching data: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+
+    if (!data.rates) {
+      throw new Error('Invalid response structure')
+    }
+
+    const rateMap = {}
+    for (const [date, rate] of Object.entries(data.rates)) {
+      rateMap[date] = rate[toCurrency]
+    }
+
+    return rateMap
+  } catch (error) {
+    console.error('Error:', error)
+    return null
+  }
+}

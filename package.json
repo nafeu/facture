@@ -9,6 +9,7 @@
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
     "attach": "npm link",
     "lint": "eslint src/ tests/",
+    "lint:fix": "eslint --fix src/ tests/",
     "format": "prettier --write \"**/*.{js,mjs,json}\""
   },
   "repository": {
@@ -33,6 +34,7 @@
   "homepage": "https://github.com/nafeu/facture#readme",
   "dependencies": {
     "commander": "^12.0.0",
+    "dotenv": "^16.4.5",
     "js-yaml": "^4.1.0",
     "puppeteer": "^22.7.1"
   },

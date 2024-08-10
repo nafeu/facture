@@ -21,6 +21,8 @@ describe('program.parse', () => {
       'Task3',
       '-r',
       'CAD',
+      '-f',
+      'USD',
       '-x',
       '0.13|GST|1234RT001',
       '-u',
@@ -41,6 +43,7 @@ describe('program.parse', () => {
       business:
         'Nafeu Nasir Media Solutions|9-4123 Racoon Street|Toronto, ON, Canada|M6H 4K1',
       client: 'Client A|5 ABC Avenue|Funtown, MI, US|44124',
+      fromCurrency: 'USD',
       currency: 'CAD',
       date: '2024-05-03',
       delimiter: '|',

@@ -1,12 +1,24 @@
+import { jest } from '@jest/globals'
+
 import {
   processOptions,
   buildHtml,
   getDateLabelFromYYYYMMDD,
 } from '../src/helpers.mjs'
 
+const getHistoricalExchangeRatesMock = jest.fn().mockImplementation(() => {
+  return new Promise((resolve) => {
+    resolve({
+      '2024-01-02': 0.5,
+      '2024-01-03': 0.5,
+      '2024-01-04': 0.5,
+    })
+  })
+})
+
 describe('processOptions', () => {
   describe('case 1', () => {
-    it('should return a processed set of options', () => {
+    it('should return a processed set of options', async () => {
       const options = {
         business:
           'Nafeu Nasir Media Solutions|9-4123 Racoon Street|Toronto, ON, Canada|M6H 4K1',
@@ -43,7 +55,10 @@ describe('processOptions', () => {
         type: 'invoicepaid',
       }
 
-      const result = processOptions(options)
+      const result = await processOptions(
+        options,
+        getHistoricalExchangeRatesMock
+      )
 
       expect(result.documentTypeLabel).toEqual('Invoice (Paid)')
       expect(result.documentId).toEqual('NN0141232')
@@ -96,7 +111,9 @@ describe('processOptions', () => {
       expect(result.taxesLabel).toEqual(`CA$13.79`)
       expect(result.totalLabel).toEqual(`CA$119.83`)
 
-      expect(result.path).toEqual('invoicepaid_NN0141232.pdf')
+      expect(result.path).toEqual(
+        'nafeu-nasir-media-solutions-invoicepaid-NN0141232.pdf'
+      )
 
       expect(result.notes).toEqual([
         'Please pay all invoices within <strong>15 days</strong> of receiving this.',
@@ -105,7 +122,7 @@ describe('processOptions', () => {
     })
   })
   describe('case 2', () => {
-    it('should return a processed set of options', () => {
+    it('should return a processed set of options', async () => {
       const options = {
         business:
           'Nafeu Nasir Media Solutions|9-4123 Racoon Street|Toronto, ON, Canada|M6H 4K1',
@@ -131,7 +148,10 @@ describe('processOptions', () => {
         type: 'invoice',
       }
 
-      const result = processOptions(options)
+      const result = await processOptions(
+        options,
+        getHistoricalExchangeRatesMock
+      )
 
       expect(result.documentTypeLabel).toEqual('Invoice')
       expect(result.documentId).toEqual('NN0141233')
@@ -172,11 +192,13 @@ describe('processOptions', () => {
       expect(result.taxesLabel).toEqual(`$41.25`)
       expect(result.totalLabel).toEqual(`$416.25`)
 
-      expect(result.path).toEqual('invoice_NN0141233.pdf')
+      expect(result.path).toEqual(
+        'nafeu-nasir-media-solutions-invoice-NN0141233.pdf'
+      )
     })
   })
   describe('case 3', () => {
-    it('should return a processed set of options', () => {
+    it('should return a processed set of options', async () => {
       const options = {
         business:
           'Nafeu Nasir Media Solutions|9-4123 Racoon Street|Toronto, ON, Canada|M6H 4K1',
@@ -201,7 +223,10 @@ describe('processOptions', () => {
         type: 'receipt',
       }
 
-      const result = processOptions(options)
+      const result = await processOptions(
+        options,
+        getHistoricalExchangeRatesMock
+      )
 
       expect(result.documentTypeLabel).toEqual('Receipt')
       expect(result.documentId.length).toEqual(14)
@@ -242,7 +267,212 @@ describe('processOptions', () => {
       expect(result.taxesLabel).toEqual(`$0.00`)
       expect(result.totalLabel).toEqual(`$200.00`)
 
-      expect(result.path.length).toEqual(26)
+      expect(result.path.length).toEqual(54)
+    })
+  })
+  describe('case 4 - when using a fromCurrency', () => {
+    it('should return a processed set of options', async () => {
+      const options = {
+        business:
+          'Nafeu Nasir Media Solutions|9-4123 Racoon Street|Toronto, ON, Canada|M6H 4K1',
+        client: 'Client A|5 ABC Avenue|Funtown, MI, US|44124',
+        currency: 'USD',
+        fromCurrency: 'CAD',
+        date: '2024-05-03',
+        delimiter: '|',
+        documentId: 'NN0141232',
+        item: [
+          {
+            details: [],
+            item: 'Work Stuff|1|45/hr|2024-01-03',
+          },
+          {
+            details: ['Task1', 'Task2', 'Task3'],
+            item: 'More Work Stuff|2|30.52/day|2024-01-04',
+          },
+        ],
+        detail: [
+          {
+            details: [],
+            item: 'Work Stuff|1|45/hr|2024-01-03',
+          },
+          {
+            details: ['Task1', 'Task2', 'Task3'],
+            item: 'More Work Stuff|2|30.52/day|2024-01-04',
+          },
+        ],
+        note: [
+          'Please pay all invoices within <strong>15 days</strong> of receiving this.',
+          'If you have any questions about this invoice please contact nafeu.nasir@gmail.com',
+        ],
+        taxInfo: '|GST|1234RT001',
+        type: 'invoicepaid',
+      }
+
+      const result = await processOptions(
+        options,
+        getHistoricalExchangeRatesMock
+      )
+
+      expect(result.documentTypeLabel).toEqual('Invoice (Paid)')
+      expect(result.documentId).toEqual('NN0141232')
+      expect(result.currencySymbol).toEqual('$')
+      expect(result.currencyCode).toEqual('USD')
+
+      expect(result.businessName).toEqual('Nafeu Nasir Media Solutions')
+      expect(result.businessDetails).toEqual([
+        '9-4123 Racoon Street',
+        'Toronto, ON, Canada',
+        'M6H 4K1',
+      ])
+
+      expect(result.clientName).toEqual('Client A')
+      expect(result.clientDetails).toEqual([
+        '5 ABC Avenue',
+        'Funtown, MI, US',
+        '44124',
+      ])
+
+      expect(result.taxTypeLabel).toEqual('GST')
+      expect(result.taxRateLabel).toEqual('0%')
+      expect(result.taxNumber).toEqual('1234RT001')
+
+      expect(result.items).toEqual([
+        {
+          date: '2024-01-03',
+          dateLabel: 'Wed Jan 03 2024',
+          details: ['45.00 CAD = 22.50 USD on 2024-01-03'],
+          rate: 22.5,
+          rateLabel: '$22.50 / hour',
+          service: 'Work Stuff',
+          total: 22.5,
+          totalLabel: '$22.50',
+          units: 1,
+        },
+        {
+          date: '2024-01-04',
+          dateLabel: 'Thu Jan 04 2024',
+          details: [
+            'Task1',
+            'Task2',
+            'Task3',
+            '30.52 CAD = 15.26 USD on 2024-01-04',
+          ],
+          rate: 15.26,
+          rateLabel: '$15.26 / day',
+          service: 'More Work Stuff',
+          total: 30.52,
+          totalLabel: '$30.52',
+          units: 2,
+        },
+      ])
+
+      expect(result.subtotalLabel).toEqual(`$53.02`)
+      expect(result.taxesLabel).toEqual(`$0.00`)
+      expect(result.totalLabel).toEqual(`$53.02`)
+
+      expect(result.path).toEqual(
+        'nafeu-nasir-media-solutions-invoicepaid-NN0141232.pdf'
+      )
+
+      expect(result.notes).toEqual([
+        'Please pay all invoices within <strong>15 days</strong> of receiving this.',
+        'If you have any questions about this invoice please contact nafeu.nasir@gmail.com',
+      ])
+    })
+  })
+  describe('case 5 - when using a fromCurrency with root level date only', () => {
+    it('should return a processed set of options', async () => {
+      const options = {
+        business:
+          'Nafeu Nasir Media Solutions|9-4123 Racoon Street|Toronto, ON, Canada|M6H 4K1',
+        client: 'Client A|5 ABC Avenue|Funtown, MI, US|44124',
+        currency: 'CAD',
+        fromCurrency: 'USD',
+        date: '2024-01-02',
+        delimiter: '|',
+        documentId: 'NN0141232',
+        item: [
+          {
+            details: [],
+            item: 'Work Stuff||200|',
+          },
+          {
+            details: ['Task1'],
+            item: 'More Work Stuff||100|',
+          },
+        ],
+        note: [
+          'Please pay all invoices within <strong>15 days</strong> of receiving this.',
+          'If you have any questions about this invoice please contact nafeu.nasir@gmail.com',
+        ],
+        taxInfo: '|GST|1234RT001',
+        type: 'invoice',
+      }
+
+      const result = await processOptions(
+        options,
+        getHistoricalExchangeRatesMock
+      )
+
+      expect(result.documentTypeLabel).toEqual('Invoice')
+      expect(result.documentId).toEqual('NN0141232')
+      expect(result.currencySymbol).toEqual('CA$')
+      expect(result.currencyCode).toEqual('CAD')
+
+      expect(result.businessName).toEqual('Nafeu Nasir Media Solutions')
+      expect(result.businessDetails).toEqual([
+        '9-4123 Racoon Street',
+        'Toronto, ON, Canada',
+        'M6H 4K1',
+      ])
+
+      expect(result.clientName).toEqual('Client A')
+      expect(result.clientDetails).toEqual([
+        '5 ABC Avenue',
+        'Funtown, MI, US',
+        '44124',
+      ])
+
+      expect(result.taxTypeLabel).toEqual('GST')
+      expect(result.taxRateLabel).toEqual('0%')
+      expect(result.taxNumber).toEqual('1234RT001')
+
+      expect(result.items).toEqual([
+        {
+          details: ['200.00 USD = 100.00 CAD on 2024-01-02'],
+          rate: 100,
+          rateLabel: 'CA$100.00',
+          isFlat: true,
+          service: 'Work Stuff',
+          total: 100,
+          totalLabel: 'CA$100.00',
+          units: 1,
+        },
+        {
+          details: ['Task1', '100.00 USD = 50.00 CAD on 2024-01-02'],
+          rate: 50,
+          rateLabel: 'CA$50.00',
+          isFlat: true,
+          service: 'More Work Stuff',
+          total: 50,
+          totalLabel: 'CA$50.00',
+          units: 1,
+        },
+      ])
+
+      expect(result.subtotalLabel).toEqual(`CA$150.00`)
+      expect(result.taxesLabel).toEqual(`CA$0.00`)
+      expect(result.totalLabel).toEqual(`CA$150.00`)
+
+      expect(result.path).toEqual(
+        'nafeu-nasir-media-solutions-invoice-NN0141232.pdf'
+      )
+
+      expect(result.notes).toEqual([
+        'Please pay all invoices within <strong>15 days</strong> of receiving this.',
+        'If you have any questions about this invoice please contact nafeu.nasir@gmail.com',
+      ])
     })
   })
 })
