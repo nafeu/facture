@@ -111,7 +111,7 @@ program
   )
   .option(
     '-i, --item <service|quantity|rate|date(optional)>',
-    'Add line items to the document',
+    'Add line items to the document, for automatic currency conversion, prepend `rate` value with `convert:`',
     collectItem
   )
   .option(
@@ -126,7 +126,7 @@ program
   )
   .option(
     '-f, --fromCurrency <currency_code>',
-    'Three digit currency code to convert from, requires API Key (apilayer.com/marketplace/exchangerates_data-api)'
+    'Three digit currency code to convert from, requires API Key (apilayer.com/marketplace/exchangerates_data-api), items require `convert:` prepended with rate'
   )
   .option(
     '-x, --taxInfo <rate|type(optional)|number(optional)>',

@@ -4,6 +4,7 @@ import {
   DEFAULT_DELIMITER,
   RATE_INTERVAL_LABELS,
   EXCHANGE_RATES_API_URL,
+  ITEM_LEVEL_CONVERSION_TAG,
 } from './constants.mjs'
 
 let items = []
@@ -138,11 +139,18 @@ export const processOptions = async (
     const [rateString, interval] = rateIntervalString
       .split('/')
       .map((str) => str.trim())
-    const initialRate = Number(rateString)
+    const extractedRateString = rateString.replace(
+      ITEM_LEVEL_CONVERSION_TAG,
+      ''
+    )
+    const initialRate = Number(
+      rateString.replace(ITEM_LEVEL_CONVERSION_TAG, '')
+    )
     const transactionDate = date || options.date
-    const rate = isConvertedRate
-      ? Number(rateString) * exchangeRates[transactionDate]
-      : Number(rateString)
+    const rate =
+      isConvertedRate && rateString.includes(ITEM_LEVEL_CONVERSION_TAG)
+        ? Number(extractedRateString) * exchangeRates[transactionDate]
+        : Number(extractedRateString)
     const intervalLabel = interval ? ` / ${RATE_INTERVAL_LABELS[interval]}` : ''
     const amountLabel = `${currencySymbol}${rate.toFixed(2)}`
     const rateLabel = `${amountLabel}${intervalLabel}`
@@ -151,7 +159,7 @@ export const processOptions = async (
 
     let parsedDetails = [...(details || [])]
 
-    if (isConvertedRate) {
+    if (isConvertedRate && rateString.includes(ITEM_LEVEL_CONVERSION_TAG)) {
       parsedDetails = [
         ...parsedDetails,
         `${initialRate.toFixed(2)} ${fromCurrencyCode} = ${rate.toFixed(2)} ${currencyCode} on ${transactionDate}`,

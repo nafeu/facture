@@ -762,3 +762,5 @@ export const CURRENCY_DATA = {
 // https://apilayer.com/marketplace/exchangerates_data-api
 export const EXCHANGE_RATES_API_URL =
   'https://api.apilayer.com/exchangerates_data/timeseries'
+
+export const ITEM_LEVEL_CONVERSION_TAG = 'convert:'

@@ -284,7 +284,7 @@ describe('processOptions', () => {
         item: [
           {
             details: [],
-            item: 'Work Stuff|1|45/hr|2024-01-03',
+            item: 'Work Stuff|1|convert:45/hr|2024-01-03',
           },
           {
             details: ['Task1', 'Task2', 'Task3'],
@@ -294,7 +294,7 @@ describe('processOptions', () => {
         detail: [
           {
             details: [],
-            item: 'Work Stuff|1|45/hr|2024-01-03',
+            item: 'Work Stuff|1|convert:45/hr|2024-01-03',
           },
           {
             details: ['Task1', 'Task2', 'Task3'],
@@ -352,24 +352,19 @@ describe('processOptions', () => {
         {
           date: '2024-01-04',
           dateLabel: 'Thu Jan 04 2024',
-          details: [
-            'Task1',
-            'Task2',
-            'Task3',
-            '30.52 CAD = 15.26 USD on 2024-01-04',
-          ],
-          rate: 15.26,
-          rateLabel: '$15.26 / day',
+          details: ['Task1', 'Task2', 'Task3'],
+          rate: 30.52,
+          rateLabel: '$30.52 / day',
           service: 'More Work Stuff',
-          total: 30.52,
-          totalLabel: '$30.52',
+          total: 61.04,
+          totalLabel: '$61.04',
           units: 2,
         },
       ])
 
-      expect(result.subtotalLabel).toEqual(`$53.02`)
+      expect(result.subtotalLabel).toEqual(`$83.54`)
       expect(result.taxesLabel).toEqual(`$0.00`)
-      expect(result.totalLabel).toEqual(`$53.02`)
+      expect(result.totalLabel).toEqual(`$83.54`)
 
       expect(result.path).toEqual(
         'nafeu-nasir-media-solutions-invoicepaid-NN0141232.pdf'
@@ -395,11 +390,11 @@ describe('processOptions', () => {
         item: [
           {
             details: [],
-            item: 'Work Stuff||200|',
+            item: 'Work Stuff||convert:200|',
           },
           {
             details: ['Task1'],
-            item: 'More Work Stuff||100|',
+            item: 'More Work Stuff||convert:100|',
           },
         ],
         note: [
